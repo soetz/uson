@@ -1,0 +1,27 @@
+{
+  "name": "uson",
+  "version": "0.0.0",
+  "description": "Ultra Simple Online Notepad",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.16.4",
+    "mongoose": "^5.4.17"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soetz/uson.git"
+  },
+  "keywords": [
+    "notepad"
+  ],
+  "author": "Simon Lecutiez <soetz.dev@gmail.com> (http://soetz.fr)",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/soetz/uson/issues"
+  },
+  "homepage": "https://github.com/soetz/uson#readme"
+}
