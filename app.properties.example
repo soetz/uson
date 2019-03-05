@@ -1,3 +1,9 @@
+#put your settings there and - of course - remove .example in filename
+
 app.name=Ultra Simple Online Notepad
 
 server.port=80
+
+mongo.address=localhost
+mongo.port=27017
+mongo.database=uson
