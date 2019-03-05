@@ -1,6 +1,12 @@
 var PropertiesReader = require('properties-reader');
 var properties = PropertiesReader('app.properties');
 
+var express = require('express');
+var app = express();
+
+var mongoose = require('mongoose');
+mongoose.set('useCreateIndex', true);
+
 //property getter - makes it easy to get a specific app property
 getProp = function(property, def = null) {
   var prop = properties.get(property);
@@ -19,11 +25,15 @@ getMongoUrl = function() {
   getProp('mongo.database', 'uson');
 }
 
-var express = require('express');
-var app = express();
+var noteSchema = new mongoose.Schema({
+  id: {type: String, unique: true, required: true, dropDups: true},
+  title: String,
+  content: String
+});
 
-var mongoose = require('mongoose');
-//connect to the mongoose database
+var Note = mongoose.model('Note', noteSchema);
+
+//connect to the MongoDB database
 mongoose.connect(getMongoUrl(), {useNewUrlParser: true});
 
 var db = mongoose.connection;
