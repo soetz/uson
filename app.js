@@ -25,6 +25,17 @@ getMongoUrl = function() {
   getProp('mongo.database', 'uson');
 }
 
+randomString = function(length) {
+  const possible = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  var result = "";
+
+  for(var i = 0; i < length; i++) {
+    result += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+
+  return result;
+}
+
 var noteSchema = new mongoose.Schema({
   id: {type: String, unique: true, required: true, dropDups: true}, //dropDups makes the query fail if the note you're trying to add has an ID that already exists in the collection
   title: String,
@@ -42,8 +53,18 @@ db.once('open', function() { //we have to wait for the MongoDB connection to ope
   //log that, please
   console.log('The MongoDB connection to the ' + getProp('mongo.database', 'uson') + ' database at ' + getProp('mongo.address', 'localhost') + ' on port ' + getProp('mongo.port', 27017) + ' is now open.');
 
-  //root endpoint
-  app.get("/", function(req, res) {
+  //create new note
+  app.post('/', function(req, res) {
+    //wip
+    res.send();
+  });
+
+  app.get('/{noteId}', function(req, res) {
+    //wip
+    res.send();
+  });
+
+  app.put('/{noteId}', function(req, res) {
     //wip
     res.send();
   });
