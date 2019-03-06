@@ -1,0 +1,132 @@
+openapi: 3.0.2
+info:
+  title: Ultra Simple Online Notepad
+  version: 0.0.0
+  description: >-
+    The name speaks for itself. This is a very lightweight online notes app.
+    Everyone can access and modify a note if they know its id, it's as simple as
+    that.
+  contact:
+    name: Simon Lecutiez
+    email: soetz.dev@gmail.com
+    url: soetz.fr
+  license:
+    name: GPL v3.0 or later
+    url: 'https://www.gnu.org/licenses/gpl.html'
+tags:
+  - name: notes
+    description: let's manipulate notes
+paths:
+  /:
+    post:
+      tags:
+        - notes
+      summary: Create a new note
+      description: >-
+        Creates a new note. It can be empty or already have a title and/or
+        content.
+      operationId: createNote
+      requestBody:
+        description: The note to create. Feel free to leave blanks or to not use it at all.
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteWithoutId'
+      responses:
+        '200':
+          description: created note response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        default:
+          description: unexpected error
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: 'There was an unexpected error, sorry for the trouble.'
+  '/{noteId}':
+    get:
+      tags:
+        - notes
+      summary: Fetch a note
+      description: Returns some good note informations.
+      operationId: getNote
+      parameters:
+        - name: noteId
+          in: path
+          description: ID of the note to fetch
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: note response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        default:
+          description: unexpected error
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: 'There was an unexpected error, sorry for the trouble.'
+    put:
+      tags:
+        - notes
+      summary: Updates an existing note
+      description: >-
+        Updates (replaces) a note's title and content using the informations
+        received.
+      operationId: updateNote
+      parameters:
+        - name: noteId
+          in: path
+          description: ID of the note to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The new informations for the note.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteWithoutId'
+      responses:
+        '200':
+          description: updated note response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        default:
+          description: unexpected error
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: 'There was an unexpected error, sorry for the trouble.'
+components:
+  schemas:
+    NoteWithoutId:
+      properties:
+        title:
+          type: string
+          example: My note title
+        content:
+          type: string
+          example: My super interesting note content.
+    Note:
+      allOf:
+        - required:
+            - id
+          properties:
+            id:
+              type: string
+              example: ZvTuADxQ
+        - $ref: '#/components/schemas/NoteWithoutId'

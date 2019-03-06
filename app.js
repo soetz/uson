@@ -26,7 +26,7 @@ getMongoUrl = function() {
 }
 
 var noteSchema = new mongoose.Schema({
-  id: {type: String, unique: true, required: true, dropDups: true},
+  id: {type: String, unique: true, required: true, dropDups: true}, //dropDups makes the query fail if the note you're trying to add has an ID that already exists in the collection
   title: String,
   content: String
 });
