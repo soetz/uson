@@ -5,12 +5,12 @@
   "main": "app.js",
   "dependencies": {
     "express": "^4.16.4",
+    "express-validator": "^5.3.1",
     "mongoose": "^5.4.17",
     "properties-reader": "0.0.16"
   },
   "devDependencies": {},
-  "scripts": {
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/soetz/uson.git"

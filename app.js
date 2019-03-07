@@ -1,15 +1,18 @@
-var PropertiesReader = require('properties-reader');
-var properties = PropertiesReader('app.properties');
+const PropertiesReader = require('properties-reader');
+const properties = PropertiesReader('app.properties');
 
-var express = require('express');
-var app = express();
+const express = require('express');
 
-var mongoose = require('mongoose');
+const app = express();
+app.use(express.json());
+const {check, validationResult} = require('express-validator/check');
+
+const mongoose = require('mongoose');
 mongoose.set('useCreateIndex', true);
 
 //property getter - makes it easy to get a specific app property
 getProp = function(property, def = null) {
-  var prop = properties.get(property);
+  const prop = properties.get(property);
   if(prop === null) { //because properties.get(property) returns null if the property does not exist
     prop = def;
   }
@@ -25,7 +28,7 @@ getMongoUrl = function() {
   getProp('mongo.database', 'uson');
 }
 
-randomString = function(length) {
+randomStringAlpha = function(length) {
   const possible = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   var result = "";
 
@@ -36,35 +39,64 @@ randomString = function(length) {
   return result;
 }
 
-var noteSchema = new mongoose.Schema({
+const noteSchema = new mongoose.Schema({
   id: {type: String, unique: true, required: true, dropDups: true}, //dropDups makes the query fail if the note you're trying to add has an ID that already exists in the collection
   title: String,
   content: String
 });
 
-var Note = mongoose.model('Note', noteSchema);
+const Note = mongoose.model('Note', noteSchema);
 
 //connect to the MongoDB database
 mongoose.connect(getMongoUrl(), {useNewUrlParser: true});
 
-var db = mongoose.connection;
+const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'Connection error: '));
 db.once('open', function() { //we have to wait for the MongoDB connection to open before doing stuff - we won't go anywhere without it anyway
   //log that, please
   console.log('The MongoDB connection to the ' + getProp('mongo.database', 'uson') + ' database at ' + getProp('mongo.address', 'localhost') + ' on port ' + getProp('mongo.port', 27017) + ' is now open.');
 
-  //create new note
-  app.post('/', function(req, res) {
+  //route: create new note
+  app.post('/', [
+    check('title').escape().trim(),
+    check('content').escape().trim()
+  ], function(req, res) {
+    const noteId = randomStringAlpha(8); //generate the noteId
+
+    //get the note request title and/or content if they are defined
+    const title = (req.body.title) ? req.body.title : "";
+    const content = (req.body.content) ? req.body.content : "";
+
+    const newNote = new Note({ //create a new note using the request informations
+      id: noteId,
+      title: title,
+      content: content
+    });
+
+    newNote.save(function (error, note) { //and save it
+      if (error) {
+        res.set('Content-Type', 'text/plain');
+        res.status(500).send('There was an unexpected error, sorry for the trouble.'); //there's an error!! tell the querier!
+        return console.error(error);
+      }
+
+      console.log('uson > New note (id: ' + note.id + ')');
+      res.json({ //everything went fine: let's show the wonderful result to the querier
+        id: note.id,
+        title: note.title,
+        content: note.content
+      });
+    });
+  });
+
+  //route: get note information
+  app.get('/:noteId', function(req, res) {
     //wip
     res.send();
   });
 
-  app.get('/{noteId}', function(req, res) {
-    //wip
-    res.send();
-  });
-
-  app.put('/{noteId}', function(req, res) {
+  //route: update note
+  app.put('/:noteId', function(req, res) {
     //wip
     res.send();
   });
