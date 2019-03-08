@@ -9,6 +9,7 @@ const {check, validationResult} = require('express-validator/check');
 
 const mongoose = require('mongoose');
 mongoose.set('useCreateIndex', true);
+mongoose.set('useFindAndModify', false);
 
 //property getter - makes it easy to get a specific app property
 getProp = function(property, def = null) {
@@ -58,7 +59,7 @@ db.once('open', function() { //we have to wait for the MongoDB connection to ope
 
   //route: create new note
   app.post('/', [
-    check('title').escape().trim(),
+    check('title').escape().trim(), //sanitize query title and content fields
     check('content').escape().trim()
   ], function(req, res) {
     const noteId = randomStringAlpha(8); //generate the noteId
@@ -114,9 +115,38 @@ db.once('open', function() { //we have to wait for the MongoDB connection to ope
   });
 
   //route: update note
-  app.put('/:noteId', function(req, res) {
-    //wip
-    res.send();
+  app.put('/:noteId', [
+    check('title').escape().trim(), //sanitize query title and content fields
+    check('content').escape().trim()
+  ], function(req, res) {
+    const update = {$set: {}};
+    if(req.body.title) { //update the title only if it is present in the query
+      update.$set.title = req.body.title;
+    }
+    if(req.body.content) { //same for the content
+      update.$set.content = req.body.content;
+    }
+
+    const query = Note.findOneAndUpdate({'id': req.params.noteId}, update, {new: true}, function(error, note) {
+      if(error) {
+        res.set('Content-Type', 'text/plain');
+        res.status(500).send('There was an unexpected error, sorry for the trouble.'); //there's an error!! tell the querier!
+        return console.error(error);
+      }
+
+      if(!note) { //can't find that damn note
+        res.set('Content-Type', 'text/plain');
+        res.status(404).send('Could not find your note, sorry.')
+        return console.error('Note ' + req.params.noteId + ' not found');
+      }
+
+      console.log('uson > Updated note (id: ' + note.id + ')');
+      res.json({ //everything went fine: let's show the wonderful result to the querier
+        id: note.id,
+        title: note.title,
+        content: note.content
+      });
+    });
   });
 
   app.listen(getProp('server.port', 80), function() {
