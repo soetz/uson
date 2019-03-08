@@ -91,8 +91,26 @@ db.once('open', function() { //we have to wait for the MongoDB connection to ope
 
   //route: get note information
   app.get('/:noteId', function(req, res) {
-    //wip
-    res.send();
+    const query = Note.findOne({'id': req.params.noteId}, 'id title content', function(error, note) {
+      if(error) {
+        res.set('Content-Type', 'text/plain');
+        res.status(500).send('There was an unexpected error, sorry for the trouble.'); //there's an error!! tell the querier!
+        return console.error(error);
+      }
+
+      if(!note) { //can't find that damn note
+        res.set('Content-Type', 'text/plain');
+        res.status(404).send('Could not find your note, sorry.')
+        return console.error('Note ' + req.params.noteId + ' not found');
+      }
+
+      console.log('uson > Get note (id: ' + note.id + ')');
+      res.json({ //get the querier what it wants
+        id: note.id,
+        title: note.title,
+        content: note.content
+      });
+    });
   });
 
   //route: update note
