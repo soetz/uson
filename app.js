@@ -53,104 +53,103 @@ mongoose.connect(getMongoUrl(), {useNewUrlParser: true});
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'Connection error: '));
-db.once('open', function() { //we have to wait for the MongoDB connection to open before doing stuff - we won't go anywhere without it anyway
-  //log that, please
+db.once('open', function() {
   console.log('The MongoDB connection to the ' + getProp('mongo.database', 'uson') + ' database at ' + getProp('mongo.address', 'localhost') + ' on port ' + getProp('mongo.port', 27017) + ' is now open.');
+});
 
-  //route: create new note
-  app.post('/', [
-    check('title').escape().trim(), //sanitize query title and content fields
-    check('content').escape().trim()
-  ], function(req, res) {
-    const noteId = randomStringAlpha(8); //generate the noteId
+//route: create new note
+app.post('/', [
+  check('title').escape().trim(), //sanitize query title and content fields
+  check('content').escape().trim()
+], function(req, res) {
+  const noteId = randomStringAlpha(8); //generate the noteId
 
-    //get the note request title and/or content if they are defined
-    const title = (req.body.title) ? req.body.title : "";
-    const content = (req.body.content) ? req.body.content : "";
+  //get the note request title and/or content if they are defined
+  const title = (req.body.title) ? req.body.title : "";
+  const content = (req.body.content) ? req.body.content : "";
 
-    const newNote = new Note({ //create a new note using the request informations
-      id: noteId,
-      title: title,
-      content: content
-    });
-
-    newNote.save(function (error, note) { //and save it
-      if (error) {
-        res.set('Content-Type', 'text/plain');
-        res.status(500).send('There was an unexpected error, sorry for the trouble.'); //there's an error!! tell the querier!
-        return console.error(error);
-      }
-
-      console.log('uson > New note (id: ' + note.id + ')');
-      res.json({ //everything went fine: let's show the wonderful result to the querier
-        id: note.id,
-        title: note.title,
-        content: note.content
-      });
-    });
+  const newNote = new Note({ //create a new note using the request informations
+    id: noteId,
+    title: title,
+    content: content
   });
 
-  //route: get note information
-  app.get('/:noteId', function(req, res) {
-    const query = Note.findOne({'id': req.params.noteId}, 'id title content', function(error, note) {
-      if(error) {
-        res.set('Content-Type', 'text/plain');
-        res.status(500).send('There was an unexpected error, sorry for the trouble.'); //there's an error!! tell the querier!
-        return console.error(error);
-      }
-
-      if(!note) { //can't find that damn note
-        res.set('Content-Type', 'text/plain');
-        res.status(404).send('Could not find your note, sorry.')
-        return console.error('Note ' + req.params.noteId + ' not found');
-      }
-
-      console.log('uson > Get note (id: ' + note.id + ')');
-      res.json({ //get the querier what it wants
-        id: note.id,
-        title: note.title,
-        content: note.content
-      });
-    });
-  });
-
-  //route: update note
-  app.put('/:noteId', [
-    check('title').escape().trim(), //sanitize query title and content fields
-    check('content').escape().trim()
-  ], function(req, res) {
-    const update = {$set: {}};
-    if(req.body.title) { //update the title only if it is present in the query
-      update.$set.title = req.body.title;
-    }
-    if(req.body.content) { //same for the content
-      update.$set.content = req.body.content;
+  newNote.save(function (error, note) { //and save it
+    if (error) {
+      res.set('Content-Type', 'text/plain');
+      res.status(500).send('There was an unexpected error, sorry for the trouble.'); //there's an error!! tell the querier!
+      return console.error(error);
     }
 
-    const query = Note.findOneAndUpdate({'id': req.params.noteId}, update, {new: true}, function(error, note) {
-      if(error) {
-        res.set('Content-Type', 'text/plain');
-        res.status(500).send('There was an unexpected error, sorry for the trouble.'); //there's an error!! tell the querier!
-        return console.error(error);
-      }
-
-      if(!note) { //can't find that damn note
-        res.set('Content-Type', 'text/plain');
-        res.status(404).send('Could not find your note, sorry.')
-        return console.error('Note ' + req.params.noteId + ' not found');
-      }
-
-      console.log('uson > Updated note (id: ' + note.id + ')');
-      res.json({ //everything went fine: let's show the wonderful result to the querier
-        id: note.id,
-        title: note.title,
-        content: note.content
-      });
+    console.log('uson > New note (id: ' + note.id + ')');
+    res.json({ //everything went fine: let's show the wonderful result to the querier
+      id: note.id,
+      title: note.title,
+      content: note.content
     });
   });
+});
 
-  app.listen(getProp('server.port', 80), function() {
-    //good news: we are live ! let's tell the console
-    console.log(getProp('app.name', 'Ultra Simple Online Notepad') + ' is listening on port ' + getProp('server.port', 80) + '.');
+//route: get note information
+app.get('/:noteId', function(req, res) {
+  const query = Note.findOne({'id': req.params.noteId}, 'id title content', function(error, note) {
+    if(error) {
+      res.set('Content-Type', 'text/plain');
+      res.status(500).send('There was an unexpected error, sorry for the trouble.'); //there's an error!! tell the querier!
+      return console.error(error);
+    }
+
+    if(!note) { //can't find that damn note
+      res.set('Content-Type', 'text/plain');
+      res.status(404).send('Could not find your note, sorry.')
+      return console.error('Note ' + req.params.noteId + ' not found');
+    }
+
+    console.log('uson > Get note (id: ' + note.id + ')');
+    res.json({ //get the querier what it wants
+      id: note.id,
+      title: note.title,
+      content: note.content
+    });
   });
+});
+
+//route: update note
+app.put('/:noteId', [
+  check('title').escape().trim(), //sanitize query title and content fields
+  check('content').escape().trim()
+], function(req, res) {
+  const update = {$set: {}};
+  if(req.body.title) { //update the title only if it is present in the query
+    update.$set.title = req.body.title;
+  }
+  if(req.body.content) { //same for the content
+    update.$set.content = req.body.content;
+  }
+
+  const query = Note.findOneAndUpdate({'id': req.params.noteId}, update, {new: true}, function(error, note) {
+    if(error) {
+      res.set('Content-Type', 'text/plain');
+      res.status(500).send('There was an unexpected error, sorry for the trouble.'); //there's an error!! tell the querier!
+      return console.error(error);
+    }
+
+    if(!note) { //can't find that damn note
+      res.set('Content-Type', 'text/plain');
+      res.status(404).send('Could not find your note, sorry.')
+      return console.error('Note ' + req.params.noteId + ' not found');
+    }
+
+    console.log('uson > Updated note (id: ' + note.id + ')');
+    res.json({ //everything went fine: let's show the wonderful result to the querier
+      id: note.id,
+      title: note.title,
+      content: note.content
+    });
+  });
+});
+
+app.listen(getProp('server.port', 80), function() {
+  //good news: we are live ! let's tell the console
+  console.log(getProp('app.name', 'Ultra Simple Online Notepad') + ' is listening on port ' + getProp('server.port', 80) + '.');
 });
